@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mission: Mars Habitat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1026;--panel:#151c3d;--panel2:#1e2752;--line:#2e3a78;
+  --text:#f1f4ff;--muted:#a3aedb;
+  --orange:#ff8a3d;--cyan:#38d6ff;--lime:#8cf05a;--pink:#ff5fa2;--yellow:#ffd43b;--red:#ff5a5a;--violet:#a98bff;--gold:#ffc23b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Fredoka,system-ui,sans-serif;color:var(--text);background:#0b1026;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+#sky{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 50% -10%,#28308a 0%,#121a4a 40%,#0b1026 75%)}
+#sky canvas{width:100%;height:100%;display:block}
+.screen{position:relative;z-index:1;min-height:100vh}
+.hidden{display:none!important}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+.em{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.btn{background:var(--orange);color:#2a1000;font-weight:600;font-size:18px;padding:12px 22px;border-radius:14px;box-shadow:0 5px 0 #b8541a;transition:transform .08s,box-shadow .08s,filter .15s}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b8541a}
+.btn.cyan{background:var(--cyan);color:#00222e;box-shadow:0 5px 0 #1a8aaa}
+.btn.lime{background:var(--lime);color:#123000;box-shadow:0 5px 0 #4f9a2a}
+.btn.gold{background:var(--gold);color:#2e1d00;box-shadow:0 5px 0 #a87a10}
+.btn.ghost{background:var(--panel2);color:var(--text);box-shadow:0 5px 0 #0d1330}
+.btn.violet{background:var(--violet);color:#160b3a;box-shadow:0 5px 0 #5b43b8}
+.btn:active{box-shadow:0 1px 0 rgba(0,0,0,.4)}
+.btn.small{font-size:15px;padding:8px 14px;border-radius:11px}
+.btn:disabled{filter:grayscale(1) brightness(.6);cursor:not-allowed;transform:none}
+
+/* Title */
+#title{display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+.title-card{max-width:580px}
+.rocket{font-size:96px;display:inline-block;animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-14px) rotate(-4deg)}}
+h1.logo{font-size:clamp(38px,8vw,64px);margin:6px 0 4px;line-height:1}
+h1.logo span{color:var(--orange)}
+.tag{color:var(--muted);font-size:20px;margin:0 0 28px}
+.title-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 20px;flex-wrap:wrap}
+.topbar .brand{font-weight:700;font-size:22px;margin-right:auto;display:flex;align-items:center;gap:8px}
+.topbar .brand span{color:var(--orange)}
+.chip{background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.chip.day{border-color:var(--yellow);color:var(--yellow)}
+.stars{color:var(--yellow);letter-spacing:1px}
+.iconbtn{background:var(--panel);border:2px solid var(--line);border-radius:12px;width:42px;height:42px;font-size:20px;display:grid;place-items:center}
+.iconbtn:hover{border-color:var(--cyan)}
+
+/* Base */
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px 40px}
+.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px}
+@media (max-width:920px){.grid{grid-template-columns:1fr}}
+.panel{background:rgba(21,28,61,.92);border:2px solid var(--line);border-radius:22px;padding:18px}
+.panel h2{margin:0 0 4px;font-size:22px;display:flex;align-items:center;gap:8px}
+.panel .sub{color:var(--muted);margin:0 0 12px;font-size:15px}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tab{flex:1;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:10px;font-weight:600;font-size:16px;position:relative}
+.tab.on{background:var(--cyan);color:#00222e;border-color:var(--cyan)}
+.tab .dot{position:absolute;top:-6px;right:-6px;background:var(--pink);color:#fff;font-size:11px;padding:2px 7px;border-radius:999px;animation:pulse 1.2s infinite}
+.scene-wrap{position:relative;border-radius:16px;overflow:hidden}
+.scene{width:100%;display:block;border-radius:16px}
+.it{transition:opacity .4s}
+.it.off{opacity:0;pointer-events:none}
+.it.pop{animation:itpop 1s cubic-bezier(.3,1.6,.5,1);transform-box:fill-box;transform-origin:center}
+@keyframes itpop{0%{transform:scale(.1);opacity:0}60%{transform:scale(1.3);opacity:1}100%{transform:scale(1)}}
+.poplabel{position:absolute;transform:translate(-50%,-100%);background:var(--yellow);color:#2e1d00;font-weight:700;padding:6px 12px;border-radius:999px;white-space:nowrap;font-size:15px;pointer-events:none;animation:rise 2.6s forwards;box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:3}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}12%{opacity:1;transform:translate(-50%,-110%) scale(1.1)}80%{opacity:1;transform:translate(-50%,-160%)}100%{opacity:0;transform:translate(-50%,-190%)}}
+.ring{position:absolute;width:20px;height:20px;border-radius:50%;border:4px solid var(--yellow);transform:translate(-50%,-50%);animation:ring .9s forwards;pointer-events:none;z-index:2}
+@keyframes ring{to{width:140px;height:140px;opacity:0;border-width:1px}}
+.sparkle{position:absolute;font-size:18px;pointer-events:none;animation:spk 1s forwards;z-index:2}
+@keyframes spk{to{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+.tw{animation:tw 1.6s ease-in-out infinite}
+@keyframes tw{50%{opacity:.35}}
+.spin{animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.walk{animation:walk 9s ease-in-out infinite}
+.walk2{animation:walk 11s ease-in-out infinite reverse}
+@keyframes walk{50%{transform:translateX(46px)}}
+.bob{animation:bob 2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.glow{animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{50%{opacity:.45}}
+.drift{animation:drift 30s linear infinite}
+@keyframes drift{from{transform:translateX(-40px)}to{transform:translateX(420px)}}
+.dash{stroke-dasharray:10 8;animation:dash 1.5s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-36}}
+
+.strength{margin-top:12px}
+.strength .row{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+.bar{height:16px;background:#0c1230;border-radius:999px;overflow:hidden;border:2px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--yellow),var(--lime));border-radius:999px;transition:width .6s cubic-bezier(.3,1.4,.5,1)}
+.test-cta{margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:#0c1230;border:2px dashed var(--line);filter:grayscale(1);opacity:.5}
+.badge.on{filter:none;opacity:1;border:2px solid var(--yellow);background:#2a2550;box-shadow:0 0 14px rgba(255,212,59,.45)}
+.badge.elite.on{border-color:var(--pink);box-shadow:0 0 14px rgba(255,95,162,.5)}
+
+.systems{display:flex;flex-direction:column;gap:9px}
+.sys{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;background:var(--panel2);border-radius:16px;padding:9px 11px;border:2px solid transparent}
+.sys.ready{border-color:var(--lime);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 4px rgba(140,240,90,.18)}}
+.sys .ico{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:24px;background:#0c1230}
+.sys .name{font-weight:600;font-size:16px}
+.sys .next{color:var(--muted);font-size:13px;line-height:1.25}
+.sys .next b{color:var(--text);font-weight:500}
+.pips{display:flex;gap:4px;margin-top:5px}
+.pip{width:18px;height:8px;border-radius:4px;background:#0c1230}
+.pip.on{background:var(--c)}
+.pip.adv{outline:1px dashed var(--gold)}
+.pip.adv.on{background:var(--gold);outline:none}
+.sys .right{text-align:right;min-width:96px}
+.inv{font-size:12px;color:var(--muted);margin-bottom:5px}
+.inv b{color:var(--text)}
+.maxed{font-weight:700;color:var(--gold);font-size:14px}
+.hint{font-size:12px;color:var(--muted)}
+
+.section-title{display:flex;align-items:baseline;gap:12px;margin:26px 0 12px;flex-wrap:wrap}
+.section-title h2{margin:0;font-size:24px}
+.section-title p{margin:0;color:var(--muted)}
+.games{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:980px){.games{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.games{grid-template-columns:1fr}}
+.gcard{border-radius:20px;padding:16px;position:relative;overflow:hidden;border:2px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:6px;min-height:200px}
+.gcard .gi{font-size:42px}
+.gcard h3{margin:0;font-size:20px}
+.gcard p{margin:0;font-size:14px;opacity:.92;flex:1}
+.gcard .lvl{position:absolute;top:12px;right:12px;font-size:12px;font-weight:600;background:rgba(0,0,0,.28);padding:4px 10px;border-radius:999px}
+.gcard.won{filter:saturate(.5)}
+.gcard .done{font-weight:700;background:rgba(0,0,0,.25);border-radius:11px;padding:8px 12px;text-align:center}
+.c-memory{background:linear-gradient(135deg,#6b4cff,#3a2a9e)}
+.c-meteor{background:linear-gradient(135deg,#ff6a3d,#b8341a)}
+.c-signal{background:linear-gradient(135deg,#14b8c8,#0d6f8e)}
+.c-maze{background:linear-gradient(135deg,#d9663e,#7a2e22)}
+.c-connect{background:linear-gradient(135deg,#3b6cff,#1a2a7a)}
+.c-repair{background:linear-gradient(135deg,#2fae6a,#14603a)}
+.c-adv{background:linear-gradient(135deg,#ffcf4a,#e08a12);color:#2e1d00;border-color:#ffe8a0}
+.c-adv .lvl{background:rgba(255,255,255,.45)}
+
+/* Game screen */
+#game .wrap{max-width:780px}
+.ghead{display:flex;align-items:center;gap:12px;margin:6px 0 10px;flex-wrap:wrap}
+.ghead h2{margin:0;font-size:26px;flex:1}
+.how{background:var(--panel2);border-radius:14px;padding:10px 14px;color:var(--muted);margin-bottom:14px;font-size:16px}
+.how b{color:var(--yellow)}
+.hud{display:flex;justify-content:space-between;align-items:center;font-size:20px;font-weight:600;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.tbar{height:12px;background:#0c1230;border-radius:999px;overflow:hidden;border:2px solid var(--line);margin-bottom:12px}
+.tbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--red),var(--yellow),var(--lime))}
+.overlay-start{position:absolute;inset:0;display:grid;place-items:center;background:rgba(5,8,25,.55);z-index:5;border-radius:20px}
+
+/* memory */
+.mem{display:grid;gap:10px}
+.card{aspect-ratio:1;perspective:600px;background:none;padding:0}
+.card .in{position:relative;width:100%;height:100%;transition:transform .35s;transform-style:preserve-3d}
+.card.flip .in,.card.done .in{transform:rotateY(180deg)}
+.card .f,.card .b{position:absolute;inset:0;border-radius:14px;display:grid;place-items:center;backface-visibility:hidden}
+.card .f{background:linear-gradient(135deg,#3b4bb0,#26307a);border:3px solid #4a5cd0;font-size:26px;color:rgba(255,255,255,.35)}
+.card .b{background:#f1f4ff;transform:rotateY(180deg);font-size:clamp(28px,7vw,48px)}
+.card.done .b{background:#d9ffc8;box-shadow:0 0 0 3px var(--lime)}
+
+/* meteor */
+.field{position:relative;height:440px;border-radius:20px;overflow:hidden;background:linear-gradient(#0d1440,#2a1a55 70%,#7a2e22 100%);border:2px solid var(--line);touch-action:manipulation}
+.field .ground{position:absolute;left:0;right:0;bottom:0;height:46px;background:#b4472a;border-top:4px solid #d9663e}
+.field .mini-dome{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);width:120px;height:60px;border-radius:60px 60px 0 0;background:rgba(220,235,255,.85);border:3px solid #fff}
+.meteor{position:absolute;top:0;width:58px;height:58px;font-size:40px;background:none;padding:0;line-height:1;touch-action:manipulation}
+.meteor.boom{animation:boom .25s forwards}
+@keyframes boom{to{opacity:0;scale:1.6}}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* signal */
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:400px;margin:0 auto}
+.pad{aspect-ratio:1;border-radius:28px;background:var(--c);opacity:.45;font-size:54px;display:grid;place-items:center;transition:opacity .1s,transform .1s;box-shadow:0 6px 0 rgba(0,0,0,.35)}
+.pad.lit{opacity:1;transform:scale(1.05);box-shadow:0 0 30px var(--c),0 6px 0 rgba(0,0,0,.35)}
+.msg{text-align:center;font-size:20px;font-weight:600;color:var(--yellow);min-height:28px;margin-bottom:12px}
+
+/* maze */
+.maze{display:grid;gap:3px;max-width:440px;margin:0 auto;background:#5a2018;padding:6px;border-radius:16px}
+.cell{aspect-ratio:1;border-radius:6px;background:#c2552f;display:grid;place-items:center;font-size:clamp(14px,4.2vw,26px);line-height:1}
+.cell.rock{background:#6d281d}
+.cell.trail{background:#e08a5c}
+.cell.goal{background:#38d6ff}
+.dpad{display:grid;grid-template-columns:repeat(3,66px);grid-template-rows:repeat(2,58px);gap:8px;justify-content:center;margin-top:14px}
+.dbtn{background:var(--panel2);border:2px solid var(--line);border-radius:14px;font-size:26px;box-shadow:0 4px 0 #0d1330}
+.dbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0d1330}
+
+/* connect */
+.cfield{position:relative;height:400px;border-radius:20px;background:radial-gradient(circle at 30% 20%,#2a2f80,#0b0f30);border:2px solid var(--line);overflow:hidden}
+.cfield svg{position:absolute;inset:0;width:100%;height:100%}
+.star{position:absolute;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:#26307a;border:3px solid #9fb8ff;font-weight:700;font-size:17px;display:grid;place-items:center;color:#fff}
+.star.lit{background:var(--yellow);color:#2e1d00;border-color:#fff;box-shadow:0 0 18px var(--yellow)}
+.star.bad{background:var(--red)}
+
+/* repair */
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:420px;margin:0 auto}
+.rp{aspect-ratio:1;border-radius:20px;background:#26307a;border:3px solid #3b4bb0;font-size:44px;display:grid;place-items:center;transition:transform .1s}
+.rp .lbl{font-size:13px;color:var(--muted)}
+.rp.spark{background:#5a1d3a;border-color:var(--red);animation:jit .25s infinite}
+@keyframes jit{50%{transform:rotate(3deg) scale(1.03)}}
+.rp.fixed{background:#1f5a2f;border-color:var(--lime)}
+
+/* quiz */
+.qcard{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:20px}
+.qdots{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+.qdot{width:30px;height:8px;border-radius:4px;background:#0c1230}
+.qdot.ok{background:var(--lime)}.qdot.no{background:var(--red)}.qdot.cur{background:var(--yellow)}
+.qtext{font-size:22px;font-weight:600;text-align:center;margin:6px 0 18px;line-height:1.3}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.opts{grid-template-columns:1fr}}
+.opt{background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:14px;font-size:17px;font-weight:500;text-align:center}
+.opt:hover{border-color:var(--cyan)}
+.opt.right{background:#1f5a2f;border-color:var(--lime)}
+.opt.wrong{background:#5a1d2a;border-color:var(--red)}
+.fact{margin-top:14px;background:#0c1230;border-radius:12px;padding:10px 14px;color:var(--muted);font-size:15px;text-align:center}
+
+/* Modals */
+.modal{position:fixed;inset:0;z-index:20;background:rgba(4,6,20,.72);display:grid;place-items:center;padding:16px;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.mbox{background:var(--panel);border:3px solid var(--line);border-radius:26px;padding:24px;max-width:600px;width:100%;max-height:92vh;overflow:auto;text-align:center;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.mbox h2{margin:4px 0 8px;font-size:28px}
+.mbox p{color:var(--muted);font-size:17px;margin:0 0 16px}
+.big{font-size:70px;line-height:1.1}
+.steps{text-align:left;display:flex;flex-direction:column;gap:8px;margin:14px 0 20px}
+.step{display:flex;gap:12px;align-items:center;background:var(--panel2);border-radius:14px;padding:9px 12px}
+.step .n{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:#0c1230}
+.step b{display:block;font-size:16px}
+.step span{color:var(--muted);font-size:14px}
+.mbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.reward{display:inline-flex;flex-direction:column;align-items:center;background:var(--panel2);border:3px solid var(--yellow);border-radius:20px;padding:14px 22px;margin:6px 6px 16px;animation:pop .4s cubic-bezier(.3,1.6,.5,1) both;max-width:210px}
+.reward.advr{border-color:var(--gold);background:#3a2e10}
+.reward .ri{font-size:50px}
+.reward b{font-size:17px}
+.reward span{color:var(--muted);font-size:13px}
+
+/* tests */
+.tests{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin-bottom:16px}
+@media (max-width:540px){.tests{grid-template-columns:1fr}}
+.tcard{background:var(--panel2);border-radius:18px;padding:14px;border:2px solid transparent;display:flex;flex-direction:column;gap:6px}
+.tcard.passed{border-color:var(--yellow)}
+.tcard.elite{grid-column:1/-1;background:linear-gradient(135deg,#3a1f5e,#24164a);border-color:var(--pink)}
+.tcard .th{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px}
+.tcard .th .e{font-size:30px}
+.tcard .tp{color:var(--muted);font-size:13px}
+.reqs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.req{font-size:13px;font-weight:600;border-radius:999px;padding:3px 9px;background:#0c1230;border:2px solid var(--red);color:#ffc2c2}
+.req.ok{border-color:var(--lime);color:#d6ffc4}
+
+/* test run */
+#runScene{position:fixed;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden}
+#runScene .bgfx{position:absolute;inset:0}
+.run-dust .bgfx{background:linear-gradient(#7a3b1d,#c26a35)}
+.run-cold .bgfx{background:linear-gradient(#0b2a55,#4d8fd1)}
+.run-meteor .bgfx{background:linear-gradient(#0a0c25,#3b1940)}
+.run-flare .bgfx{background:radial-gradient(circle at 80% 10%,#fff6b0,#ff9a1f 30%,#5a1a10 80%)}
+.run-mega .bgfx{background:radial-gradient(circle at 50% 30%,#7a2a8a,#1a0830 80%)}
+.fx{position:absolute;top:-40px;pointer-events:none}
+.run-dust .fx{width:120px;height:3px;background:rgba(255,220,170,.7);border-radius:3px;top:auto;left:-140px;animation:streak linear infinite}
+@keyframes streak{to{transform:translateX(130vw)}}
+.run-cold .fx{color:#fff;font-size:22px;animation:fall linear infinite}
+.run-meteor .fx,.run-mega .fx{font-size:34px;animation:fallD linear infinite}
+.run-flare .fx{width:4px;height:80px;background:rgba(255,255,200,.75);animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(115vh)}}
+@keyframes fallD{to{transform:translate(-30vw,115vh)}}
+.runbox{position:relative;z-index:2;background:rgba(10,14,40,.85);border:3px solid rgba(255,255,255,.25);border-radius:26px;padding:24px;width:min(460px,92vw);text-align:center}
+.runbox h2{margin:6px 0;font-size:28px}
+.runbox .big{animation:float 1.2s ease-in-out infinite}
+.checks{text-align:left;display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.check{display:flex;justify-content:space-between;gap:8px;background:rgba(255,255,255,.07);padding:8px 12px;border-radius:12px;font-weight:600;opacity:0;transform:translateY(8px);transition:.3s}
+.check.show{opacity:1;transform:none}
+.check .r.ok{color:var(--lime)}.check .r.no{color:var(--red)}
+
+/* night */
+#night{position:fixed;inset:0;z-index:35;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#1c1660,#05061a 75%);animation:fade .5s;padding:16px}
+#night.morning{background:radial-gradient(circle at 50% 20%,#ffb46b,#c2552f 40%,#2a1240 90%);transition:background 1s}
+.nbox{text-align:center;max-width:520px;width:100%}
+.nbox .big{font-size:90px;animation:float 3s ease-in-out infinite}
+.nbox h2{font-size:34px;margin:8px 0}
+.nbox p{color:#e6e9ff;font-size:18px;margin:0 0 14px}
+.mlist{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0 20px}
+.mitem{background:rgba(0,0,0,.3);border-radius:16px;padding:10px 14px;font-weight:600;min-width:110px}
+.mitem .e{font-size:32px;display:block}
+
+.conf{position:fixed;top:-20px;width:10px;height:16px;z-index:40;pointer-events:none;animation:conf linear forwards}
+@keyframes conf{to{transform:translateY(110vh) rotate(720deg)}}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:var(--lime);color:#123000;font-weight:700;padding:12px 22px;border-radius:999px;z-index:50;transition:transform .3s cubic-bezier(.3,1.5,.5,1);font-size:17px;box-shadow:0 8px 24px rgba(0,0,0,.4);text-align:center;max-width:92vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="sky"><canvas id="starCanvas"></canvas></div>
+
+<section id="title" class="screen">
+  <div class="title-card">
+    <div class="rocket">🚀</div>
+    <h1 class="logo">Mission: <span>Mars Habitat</span></h1>
+    <p class="tag">Live day by day on Mars. Win missions, collect equipment, and watch your habitat come to life inside and out!</p>
+    <div class="title-btns">
+      <button class="btn" id="startBtn">▶ Start Mission</button>
+      <button class="btn ghost" id="howBtn1">❓ How to Play</button>
+    </div>
+  </div>
+</section>
+
+<section id="base" class="screen hidden">
+  <div class="topbar">
+    <div class="brand">🪐 Mission: <span>Mars Habitat</span></div>
+    <div class="chip day">☀️ Day <span id="dayNum">1</span></div>
+    <div class="chip" title="Difficulty">Difficulty <span class="stars" id="diffStars"></span></div>
+    <div class="chip" title="Equipment waiting to be installed">📦 <span id="cargo">0</span></div>
+    <div class="chip" title="Storm tests passed">🏅 <span id="badgeCount">0</span>/4</div>
+    <button class="btn violet small" id="sleepBtn">🌙 Next Day</button>
+    <button class="iconbtn" id="soundBtn" title="Sound on/off">🔊</button>
+    <button class="iconbtn" id="howBtn2" title="How to play">❓</button>
+    <button class="iconbtn" id="resetBtn" title="Start over">🔄</button>
+  </div>
+  <div class="wrap">
+    <div class="grid">
+      <div class="panel">
+        <h2>🏠 Your Habitat</h2>
+        <p class="sub">Everything you install appears here. Check both views!</p>
+        <div class="tabs">
+          <button class="tab" data-tab="out">🌄 Outside</button>
+          <button class="tab" data-tab="in">🛋️ Inside</button>
+        </div>
+        <div class="scene-wrap" id="sceneWrap"></div>
+        <div class="strength">
+          <div class="row"><span>Habitat Strength</span><span id="strengthTxt">0%</span></div>
+          <div class="bar"><i id="strengthBar"></i></div>
+        </div>
+        <div class="test-cta">
+          <button class="btn cyan" id="testBtn">🌪️ Storm Test</button>
+          <div class="badges" id="badgeRow"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>🔧 Habitat Systems</h2>
+        <p class="sub">Levels 1–3 use 📦 parts from missions. Levels 4–5 need ⭐ Advanced Tech.</p>
+        <div class="systems" id="systems"></div>
+      </div>
+    </div>
+    <div class="section-title"><h2 id="missionTitle">☀️ Day 1 Missions</h2><p>New missions every day, and they get harder!</p></div>
+    <div class="games" id="games"></div>
+  </div>
+</section>
+
+<section id="game" class="screen hidden">
+  <div class="wrap" style="padding-top:18px">
+    <div class="ghead"><button class="btn ghost small" id="backBtn">← Base</button><h2 id="gTitle">Game</h2><span class="chip" id="gDiff"></span></div>
+    <div class="how" id="gHow"></div>
+    <div id="gArea"></div>
+  </div>
+</section>
+
+<div id="modalRoot"></div>
+<div id="toast"></div>
+
+<script>
+/* ================= DATA ================= */
+const SYSTEMS=[
+  {id:'shield',name:'Radiation Shield',icon:'🛡️',c:'#38d6ff'},
+  {id:'hull',name:'Hull & Anchors',icon:'🔩',c:'#a98bff'},
+  {id:'power',name:'Power',icon:'⚡',c:'#ffd43b'},
+  {id:'heat',name:'Heating',icon:'🔥',c:'#ff8a3d'},
+  {id:'air',name:'Life Support',icon:'🌱',c:'#8cf05a'},
+  {id:'comfort',name:'Crew Quarters',icon:'🛏️',c:'#ff5fa2'}
+];
+const SYS=Object.fromEntries(SYSTEMS.map(s=>[s.id,s]));
+const BASIC=3,MAXLV=5;
+// One item per level. w = where it appears (out/in); x,y = where it pops on the scene (400x250)
+const ITEMS={
+  shield:[{n:'Shield Plates',e:'🛡️',w:'out',x:200,y:98},{n:'Energy Dome',e:'🔵',w:'out',x:200,y:106},{n:'Magnetic Shield',e:'🧲',w:'out',x:200,y:92},{n:'Water Walls',e:'💧',w:'in',x:200,y:58},{n:'Plasma Shield',e:'✨',w:'out',x:200,y:82}],
+  hull:[{n:'Steel Frame',e:'🏗️',w:'out',x:200,y:194},{n:'Anchor Struts',e:'🔩',w:'out',x:200,y:212},{n:'Storm Anchors',e:'⚓',w:'out',x:200,y:222},{n:'Regolith Bricks',e:'🧱',w:'out',x:200,y:180},{n:'Underground Bunker',e:'🚪',w:'out',x:45,y:222}],
+  power:[{n:'Solar Panel',e:'☀️',w:'out',x:98,y:166},{n:'Battery Bank',e:'🔋',w:'in',x:307,y:180},{n:'Solar Array',e:'🔆',w:'out',x:40,y:172},{n:'Wind Turbine',e:'🌬️',w:'out',x:375,y:110},{n:'Mini Reactor',e:'⚛️',w:'in',x:348,y:176}],
+  heat:[{n:'Space Heater',e:'🔥',w:'in',x:116,y:186},{n:'Cozy Walls',e:'🧶',w:'in',x:200,y:135},{n:'Warm Lights',e:'💡',w:'in',x:200,y:66},{n:'Geothermal Drill',e:'⛏️',w:'out',x:322,y:132},{n:'Hot Cocoa Bar',e:'☕',w:'in',x:153,y:128}],
+  air:[{n:'Oxygen Tanks',e:'💨',w:'out',x:316,y:180},{n:'Space Garden',e:'🌱',w:'in',x:220,y:182},{n:'Water Recycler',e:'🚰',w:'in',x:267,y:176},{n:'Greenhouse',e:'🪴',w:'out',x:345,y:222},{n:'Algae Farm',e:'🧪',w:'in',x:200,y:84}],
+  comfort:[{n:'Bunk Beds',e:'🛏️',w:'in',x:70,y:178},{n:'Space Kitchen',e:'🍳',w:'in',x:160,y:186},{n:'Game Corner',e:'🎮',w:'in',x:92,y:120},{n:'Science Lab',e:'🔬',w:'in',x:266,y:128},{n:'Robot Helper',e:'🤖',w:'in',x:178,y:160}]
+};
+const TESTS=[
+  {id:'dust',name:'Dust Storm',e:'🌪️',info:'Winds up to 100 km/h and dust that blocks the sun.',req:{hull:2,power:1},cls:'run-dust'},
+  {id:'cold',name:'Freezing Night',e:'🥶',info:'Temperatures drop to −120 °C after sunset.',req:{heat:2,power:2,air:1},cls:'run-cold'},
+  {id:'meteor',name:'Meteor Shower',e:'☄️',info:'Tiny space rocks rain down on the base.',req:{shield:2,hull:2},cls:'run-meteor'},
+  {id:'flare',name:'Solar Flare',e:'☀️',info:'A blast of radiation from the Sun.',req:{shield:3,air:2},cls:'run-flare'},
+  {id:'mega',name:'Mega Storm (Elite)',e:'🌀',info:'Dust, meteors and radiation all at once! Needs Advanced Tech.',req:{shield:4,hull:4,power:4},cls:'run-mega',elite:true}
+];
+const GAMES={
+  memory:{title:'Star Memory',icon:'🃏',type:'Puzzle',fn:memoryGame,
+    how:d=>`Flip two cards at a time. Find all <b>${memPairs(d)} pairs</b> to win. Use <b>${memPairs(d)*2} moves or fewer</b> for a bonus!`,
+    short:d=>`Find ${memPairs(d)} matching space pairs.`},
+  meteor:{title:'Meteor Blaster',icon:'☄️',type:'Action',fn:meteorGame,
+    how:d=>`Tap meteors before they hit the ground. Blast <b>${8+2*d}</b> to win. You have <b>3 lives</b>.${d>=3?' <b>Don\'t tap the satellites 🛰️!</b>':''} Lose no lives for a bonus!`,
+    short:d=>`Blast ${8+2*d} falling meteors.${d>=3?' Avoid satellites!':''}`},
+  signal:{title:'Signal Repeat',icon:'📡',type:'Memory',fn:signalGame,
+    how:d=>`Watch the planets light up, then tap them in the <b>same order</b>. Reach <b>round ${3+d}</b> to win. No mistakes = bonus!`,
+    short:d=>`Repeat a ${3+d}-step signal from Earth.`},
+  maze:{title:'Rover Run',icon:'🚙',type:'Puzzle',fn:mazeGame,
+    how:d=>`Drive the rover 🚙 to the base 🏠 using the arrows. Avoid rocks 🪨 and don't run out of <b>battery</b>! Take the shortest route for a bonus.`,
+    short:d=>`Drive across a ${5+d}×${5+d} crater field.`},
+  connect:{title:'Star Connect',icon:'✨',type:'Speed',fn:connectGame,
+    how:d=>`Tap the stars in order <b>1, 2, 3…</b> to draw a constellation before time runs out. <b>3 wrong taps</b> and you lose. No mistakes = bonus!`,
+    short:d=>`Connect ${4+2*d} stars in order, fast!`},
+  repair:{title:'Repair Rush',icon:'🔧',type:'Action',fn:repairGame,
+    how:d=>`Sparks ⚡ pop up on the habitat panels. Tap them fast to fix them! Fix <b>${8+3*d}</b> before time runs out. Finish quickly for a bonus!`,
+    short:d=>`Fix ${8+3*d} sparking panels in 30 s.`}
+};
+const GKEYS=Object.keys(GAMES);
+const QUIZ=[
+  {q:'Which mission first landed humans on the Moon?',a:['Apollo 11','Apollo 13','Gemini 4','Artemis I'],f:'Apollo 11 landed on the Moon on 20 July 1969.'},
+  {q:'Who was the first person to walk on the Moon?',a:['Neil Armstrong','Buzz Aldrin','Yuri Gagarin','Sally Ride'],f:'Neil Armstrong stepped out first, with Buzz Aldrin right after.'},
+  {q:'Who was the first human to travel into space?',a:['Yuri Gagarin','Alan Shepard','John Glenn','Neil Armstrong'],f:'Yuri Gagarin orbited Earth in 1961 aboard Vostok 1.'},
+  {q:'Which NASA rover landed on Mars in February 2021?',a:['Perseverance','Curiosity','Opportunity','Sojourner'],f:'Perseverance landed in Jezero Crater to search for signs of ancient life.'},
+  {q:'What was the name of the small helicopter that flew on Mars?',a:['Ingenuity','Dragonfly','Skylark','Phoenix'],f:'Ingenuity made the first powered flight on another planet in 2021.'},
+  {q:'Which space telescope launched in 2021 to see the early universe in infrared light?',a:['James Webb','Hubble','Kepler','Spitzer'],f:'The James Webb Space Telescope sits about 1.5 million km from Earth.'},
+  {q:'What is the name of NASA\'s program to send people back to the Moon?',a:['Artemis','Apollo','Gemini','Mercury'],f:'In myths, Artemis is the twin sister of Apollo.'},
+  {q:'Which spacecraft, launched in 1977, is the farthest human-made object from Earth?',a:['Voyager 1','Pioneer 10','New Horizons','Cassini'],f:'Voyager 1 is now in interstellar space.'},
+  {q:'Which mission flew past Pluto in 2015?',a:['New Horizons','Juno','Voyager 2','Dawn'],f:'New Horizons showed Pluto has a heart-shaped icy plain.'},
+  {q:'About how long does the International Space Station take to orbit Earth once?',a:['90 minutes','24 hours','12 hours','7 days'],f:'Astronauts on the ISS see about 16 sunrises every day!'},
+  {q:'Which Apollo mission had a famous problem but brought its crew home safely?',a:['Apollo 13','Apollo 11','Apollo 8','Apollo 17'],f:'An oxygen tank exploded, but the crew returned safely in 1970.'},
+  {q:'Why is Mars called the Red Planet?',a:['Rusty iron in its soil','It is very hot','Red clouds','Red ice caps'],f:'Iron oxide (rust) in the dust gives Mars its color.'},
+  {q:'What is the biggest volcano in the solar system?',a:['Olympus Mons','Mauna Kea','Mount Everest','Mount Fuji'],f:'Olympus Mons on Mars is about 2.5 times taller than Mount Everest.'},
+  {q:'About how long is one day on Mars?',a:['24 hours 40 minutes','12 hours','48 hours','10 hours'],f:'A Mars day is called a "sol".'},
+  {q:'Which spacecraft orbited Saturn from 2004 to 2017?',a:['Cassini','Galileo','Juno','Magellan'],f:'Cassini discovered water geysers on Saturn\'s moon Enceladus.'},
+  {q:'Which planet does the Juno spacecraft study?',a:['Jupiter','Saturn','Mars','Venus'],f:'Juno arrived at Jupiter in 2016.'},
+  {q:'Who was the first American woman in space?',a:['Sally Ride','Mae Jemison','Valentina Tereshkova','Christina Koch'],f:'Sally Ride flew on Space Shuttle Challenger in 1983.'},
+  {q:'Who was the first woman in space?',a:['Valentina Tereshkova','Sally Ride','Peggy Whitson','Eileen Collins'],f:'Valentina Tereshkova flew in 1963.'},
+  {q:'Which space telescope was launched in 1990 and orbits Earth?',a:['Hubble','James Webb','Chandra','Kepler'],f:'Hubble has taken over a million observations.'},
+  {q:'Which rover landed on Mars in 2012 in Gale Crater?',a:['Curiosity','Perseverance','Spirit','Sojourner'],f:'Curiosity is about the size of a small car.'},
+  {q:'What does NASA stand for?',a:['National Aeronautics and Space Administration','North American Space Agency','National Astronaut Space Academy','New Air and Space Association'],f:'NASA was founded in 1958.'},
+  {q:'Which planet is closest to the Sun?',a:['Mercury','Venus','Mars','Earth'],f:'A year on Mercury lasts only 88 Earth days.'},
+  {q:'What gas makes up most of the air on Mars?',a:['Carbon dioxide','Oxygen','Nitrogen','Helium'],f:'Mars\' air is about 95% carbon dioxide, so astronauts need oxygen tanks.'},
+  {q:'Which company builds the Crew Dragon spacecraft?',a:['SpaceX','Blue Origin','Airbus','Rocket Lab'],f:'Crew Dragon first carried astronauts to the ISS in 2020.'},
+  {q:'Which 2022 mission crashed into a small asteroid on purpose to change its path?',a:['DART','OSIRIS-REx','Lucy','Rosetta'],f:'DART tested a way to protect Earth from dangerous asteroids.'},
+  {q:'Which mission brought samples from asteroid Bennu back to Earth in 2023?',a:['OSIRIS-REx','Hayabusa2','DART','Stardust'],f:'The capsule landed in the Utah desert.'},
+  {q:'How strong is gravity on Mars compared to Earth?',a:['About 38%','About 90%','Twice as strong','About 5%'],f:'You could jump almost 3 times higher on Mars!'},
+  {q:'Which planet has the Great Red Spot, a giant storm?',a:['Jupiter','Mars','Neptune','Saturn'],f:'The Great Red Spot is wider than Earth.'},
+  {q:'About how cold is Mars on average?',a:['−60 °C','20 °C','0 °C','−250 °C'],f:'That\'s why habitats need good heating!'},
+  {q:'What do astronauts call the suit they wear outside a spacecraft?',a:['Spacesuit / EVA suit','Flight jacket','Diving suit','Pressure coat'],f:'EVA means "extravehicular activity", or a spacewalk.'}
+];
+
+/* ================= STATE ================= */
+const KEY='marsHabitatV2';
+const zero=()=>Object.fromEntries(SYSTEMS.map(s=>[s.id,0]));
+function freshState(){return{day:1,seed:(Math.random()*1e9)|0,levels:zero(),parts:zero(),adv:zero(),passed:{},won:{},advDay:0,advResult:null,usedQ:[],seenHelp:false,sound:true,done:false,elite:false,tab:'out',newIn:false,newOut:false}}
+let S=freshState();
+try{const raw=localStorage.getItem(KEY);if(raw){const p=JSON.parse(raw);S=Object.assign(freshState(),p);['levels','parts','adv'].forEach(k=>S[k]=Object.assign(zero(),p[k]||{}));}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const diffOf=day=>Math.min(5,Math.ceil(day*0.75));
+const starStr=d=>'★'.repeat(d)+'☆'.repeat(5-d);
+
+/* ================= SOUND ================= */
+let AC=null;
+function tone(f,d=.15,type='sine',vol=.15,delay=0){
+  if(!S.sound)return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02);}catch(e){}
+}
+const sfx={
+  click:()=>tone(520,.08,'triangle',.1),
+  pop:()=>{tone(700,.08,'square',.06);tone(1000,.1,'triangle',.08,.04)},
+  bad:()=>tone(140,.3,'sawtooth',.1),
+  win:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.25,'triangle',.14,i*.11)),
+  lose:()=>[400,320,250].forEach((f,i)=>tone(f,.25,'triangle',.12,i*.14)),
+  upgrade:()=>[440,660,880,1175].forEach((f,i)=>tone(f,.18,'square',.07,i*.07)),
+  night:()=>[392,330,262].forEach((f,i)=>tone(f,.5,'sine',.1,i*.3))
+};
+
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s);
+function show(id){['title','base','game'].forEach(x=>$('#'+x).classList.toggle('hidden',x!==id));window.scrollTo(0,0)}
+function shuffle(a,r=Math.random){for(let i=a.length-1;i>0;i--){const j=(r()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
+const ri=(a,b)=>a+((Math.random()*(b-a+1))|0);
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
+function modal(html){const r=$('#modalRoot');r.innerHTML=`<div class="modal"><div class="mbox">${html}</div></div>`;return r.firstElementChild}
+function closeModal(){$('#modalRoot').innerHTML=''}
+function confetti(n=90){const cols=['#ff8a3d','#38d6ff','#8cf05a','#ffd43b','#ff5fa2','#a98bff'];
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className='conf';c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];c.style.animationDuration=(2+Math.random()*2)+'s';c.style.animationDelay=Math.random()*.6+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),5000)}}
+
+/* ================= DAYS ================= */
+const missionMemo={};
+function dayMissions(day){
+  if(missionMemo[day])return missionMemo[day];
+  let pick;
+  if(day===1)pick=['memory','connect','signal'];
+  else if(day===2)pick=['meteor','maze','repair'];
+  else{const r=rng(S.seed+day*7919),prev=dayMissions(day-1);
+    for(let t=0;t<30;t++){pick=shuffle(GKEYS.slice(),r).slice(0,3);if(pick.filter(k=>prev.includes(k)).length<=1)break}}
+  return missionMemo[day]=pick;
+}
+const advType=day=>day%2===1?'quiz':'math';
+
+/* ================= SCENES ================= */
+const it=(k,inner)=>`<g class="it" data-k="${k}">${inner}</g>`;
+const em=(x,y,s,c,extra='')=>`<text class="em" x="${x}" y="${y}" font-size="${s}" text-anchor="middle" dominant-baseline="central" ${extra}>${c}</text>`;
+function outsideSVG(){
+  let bricks='';for(let r=0;r<2;r++)for(let i=0;i<9;i++)bricks+=`<rect x="${141+i*13+(r?6:0)}" y="${176+r*7}" width="12" height="6" rx="1" fill="#9b5a3a" stroke="#6d3a24" stroke-width=".8"/>`;
+  return `<svg class="scene" id="svgOut" viewBox="0 0 400 250" aria-label="Outside the habitat">
+  <defs><linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1450"/><stop offset="1" stop-color="#e0784a"/></linearGradient>
+  <linearGradient id="plasG" x1="0" x2="1"><stop offset="0" stop-color="#ff5fa2"/><stop offset=".5" stop-color="#a98bff"/><stop offset="1" stop-color="#38d6ff"/></linearGradient></defs>
+  <rect width="400" height="250" fill="url(#skyG)"/>
+  <circle cx="330" cy="38" r="13" fill="#ffe7b0" opacity=".9"/><circle cx="70" cy="28" r="4" fill="#d8c8ff" opacity=".8"/>
+  <g class="drift">${em(0,52,14,'🛰️')}</g>
+  <path d="M0 170 Q60 150 120 168 T260 160 T400 168 V250 H0Z" fill="#a8432a"/>
+  ${it('power-4',`<line x1="375" y1="182" x2="375" y2="112" stroke="#dfe7ff" stroke-width="3"/><g class="spin" style="transform-origin:375px 110px"><path d="M375 110 L375 82 L380 106Z M375 110 L399 124 L376 116Z M375 110 L351 124 L372 114Z" fill="#f1f4ff"/></g><circle cx="375" cy="110" r="4" fill="#ffd43b"/>`)}
+  ${it('heat-4',`<path d="M310 166 L322 120 L334 166 M314 150 H330 M317 136 H327" fill="none" stroke="#ffd43b" stroke-width="2.5"/><circle class="glow" cx="322" cy="112" r="5" fill="#fff" opacity=".7"/><circle class="glow" cx="328" cy="104" r="4" fill="#fff" opacity=".5"/>`)}
+  <path d="M0 195 Q100 180 200 196 T400 192 V250 H0Z" fill="#c2552f"/>
+  <ellipse cx="90" cy="232" rx="14" ry="5" fill="#8a3420"/><ellipse cx="290" cy="238" rx="18" ry="5" fill="#8a3420"/>
+  ${it('shield-1',`<path d="M100 196 A100 100 0 0 1 300 196" fill="none" stroke="#38d6ff" stroke-width="3" stroke-dasharray="6 6" opacity=".75"/>`)}
+  ${it('shield-2',`<path d="M108 196 A92 92 0 0 1 292 196" fill="rgba(56,214,255,.10)" stroke="#38d6ff" stroke-width="4"/>`)}
+  ${it('shield-3',`<path d="M94 196 A106 106 0 0 1 306 196" fill="rgba(56,214,255,.08)" stroke="#9cf0ff" stroke-width="6" opacity=".9"/>`)}
+  ${it('shield-5',`<path class="dash" d="M84 196 A116 116 0 0 1 316 196" fill="rgba(255,95,162,.07)" stroke="url(#plasG)" stroke-width="4"/>`)}
+  ${it('hull-1',`<rect x="128" y="190" width="144" height="10" rx="4" fill="#5d6b8f"/>`)}
+  ${it('hull-2',`<path d="M140 196 L120 214 M260 196 L280 214" stroke="#8796bd" stroke-width="5" stroke-linecap="round"/><circle cx="120" cy="214" r="5" fill="#ffd43b"/><circle cx="280" cy="214" r="5" fill="#ffd43b"/>`)}
+  ${it('hull-3',`<path d="M170 198 L160 222 M230 198 L240 222" stroke="#8796bd" stroke-width="5" stroke-linecap="round"/><circle cx="160" cy="222" r="5" fill="#ffd43b"/><circle cx="240" cy="222" r="5" fill="#ffd43b"/>`)}
+  <path d="M135 194 A65 65 0 0 1 265 194 Z" fill="#dfe8ff" stroke="#ffffff" stroke-width="3"/>
+  ${it('hull-4',bricks)}
+  <path d="M150 194 A50 50 0 0 1 250 194" fill="none" stroke="#b9c7ef" stroke-width="2"/>
+  <rect x="188" y="168" width="24" height="26" rx="10" fill="#3b4bb0"/>
+  <circle cx="166" cy="166" r="7" class="win" fill="#2a3680"/><circle cx="234" cy="166" r="7" class="win" fill="#2a3680"/><circle cx="200" cy="146" r="7" class="win" fill="#2a3680"/>
+  <line x1="200" y1="129" x2="200" y2="108" stroke="#cfd8f7" stroke-width="3"/><circle cx="200" cy="106" r="4" fill="#ff5fa2" class="glow"/>
+  ${it('power-1',`<line x1="98" y1="196" x2="98" y2="176" stroke="#cfd8f7" stroke-width="3"/><rect x="78" y="160" width="40" height="18" rx="2" fill="#2b5cff" stroke="#9fb8ff" stroke-width="2" transform="skewX(-12)"/>`)}
+  ${it('power-3',`<line x1="58" y1="200" x2="58" y2="180" stroke="#cfd8f7" stroke-width="3"/><rect x="40" y="164" width="40" height="18" rx="2" fill="#2b5cff" stroke="#9fb8ff" stroke-width="2" transform="skewX(-12)"/><line x1="22" y1="205" x2="22" y2="185" stroke="#cfd8f7" stroke-width="3"/><rect x="6" y="169" width="40" height="18" rx="2" fill="#2b5cff" stroke="#9fb8ff" stroke-width="2" transform="skewX(-12)"/>`)}
+  ${it('air-1',`<rect x="292" y="166" width="18" height="32" rx="9" fill="#8cf05a" stroke="#d6ffc4" stroke-width="2"/><rect x="316" y="168" width="18" height="32" rx="9" fill="#8cf05a" stroke="#d6ffc4" stroke-width="2"/><rect x="340" y="170" width="18" height="32" rx="9" fill="#8cf05a" stroke="#d6ffc4" stroke-width="2"/><path d="M301 166 V156 H349 V170" fill="none" stroke="#d6ffc4" stroke-width="2"/>`)}
+  ${it('air-4',`<path d="M316 246 A29 29 0 0 1 374 246 Z" fill="rgba(140,240,90,.28)" stroke="#d6ffc4" stroke-width="2"/>${em(334,236,13,'🌿')}${em(354,236,13,'🍅')}`)}
+  ${it('hull-5',`<path d="M4 248 Q45 196 86 248 Z" fill="#8a3420"/><rect x="34" y="218" width="22" height="30" rx="10" fill="#3b4bb0" stroke="#9fb8ff" stroke-width="2"/><circle cx="51" cy="234" r="2" fill="#ffd43b"/>`)}
+  ${em(160,236,18,'🚙')}
+  </svg>`;
+}
+function insideSVG(){
+  let lights='';for(let a=150,i=0;a>=30;a-=15,i++){const r=a*Math.PI/180,x=200+165*Math.cos(r),y=225-165*Math.sin(r);lights+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.5" fill="${i%2?'#ffd43b':'#ff8a3d'}" class="tw" style="animation-delay:${(i*.2).toFixed(1)}s"/>`}
+  let stars='';const r=rng(7);for(let i=0;i<30;i++)stars+=`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*250).toFixed(0)}" r="${(r()*1.2+.3).toFixed(1)}" fill="#fff" opacity=".7"/>`;
+  return `<svg class="scene" id="svgIn" viewBox="0 0 400 250" aria-label="Inside the habitat">
+  <defs><radialGradient id="heatG"><stop offset="0" stop-color="#ffb347" stop-opacity=".9"/><stop offset="1" stop-color="#ff6a00" stop-opacity="0"/></radialGradient></defs>
+  <rect width="400" height="250" fill="#0d0a2e"/>${stars}
+  <path d="M8 228 A192 192 0 0 1 392 228 Z" fill="#5d6b8f"/>
+  <path d="M22 226 A178 178 0 0 1 378 226 Z" fill="#2c3470"/>
+  ${it('heat-2',`<path d="M22 226 A178 178 0 0 1 378 226 Z" fill="#c46a4a" opacity=".38"/><path d="M40 226 A160 160 0 0 1 360 226" fill="none" stroke="#ffb46b" stroke-width="2" stroke-dasharray="3 6" opacity=".6"/>`)}
+  ${it('shield-4',`<path d="M26 226 A174 174 0 0 1 374 226" fill="none" stroke="#38d6ff" stroke-width="7" opacity=".6"/>`)}
+  <circle cx="140" cy="72" r="12" fill="#0d0a2e" stroke="#9fb8ff" stroke-width="3"/><circle cx="260" cy="72" r="12" fill="#0d0a2e" stroke="#9fb8ff" stroke-width="3"/>
+  <circle cx="136" cy="70" r="1.5" fill="#fff"/><circle cx="263" cy="75" r="1.5" fill="#ffb46b"/>
+  ${it('air-5',`<rect x="181" y="50" width="10" height="56" rx="5" fill="#3fae4a" stroke="#d6ffc4"/><rect x="195" y="50" width="10" height="64" rx="5" fill="#2f9a3e" stroke="#d6ffc4"/><rect x="209" y="50" width="10" height="56" rx="5" fill="#3fae4a" stroke="#d6ffc4"/><circle class="tw" cx="186" cy="90" r="2" fill="#d6ffc4"/><circle class="tw" cx="200" cy="80" r="2" fill="#d6ffc4" style="animation-delay:.5s"/><circle class="tw" cx="214" cy="95" r="2" fill="#d6ffc4" style="animation-delay:1s"/>`)}
+  ${it('heat-3',`<path d="M57 142 A165 165 0 0 1 343 142" fill="none" stroke="#6b5a3a" stroke-width="1.5"/>${lights}`)}
+  ${it('comfort-3',`<rect x="66" y="104" width="52" height="32" rx="4" fill="#111" stroke="#9fb8ff" stroke-width="2"/>${em(92,120,16,'👾')}${em(92,146,13,'🎮')}`)}
+  ${it('heat-5',`<line x1="128" y1="140" x2="178" y2="140" stroke="#9aa6d6" stroke-width="3"/>${em(142,130,14,'☕')}${em(164,130,14,'🍪')}`)}
+  ${it('comfort-4',`<line x1="232" y1="140" x2="300" y2="140" stroke="#9aa6d6" stroke-width="3"/>${em(246,129,15,'🔬')}${em(266,129,15,'🧪')}${em(286,129,15,'🧬')}`)}
+  <rect x="22" y="205" width="356" height="21" fill="#232857"/><line x1="22" y1="205" x2="378" y2="205" stroke="#4a5294" stroke-width="2"/>
+  <rect x="26" y="176" width="10" height="29" rx="3" fill="#9aa6d6"/>
+  ${it('comfort-1',`<rect x="42" y="158" width="4" height="47" fill="#9aa6d6"/><rect x="96" y="158" width="4" height="47" fill="#9aa6d6"/><rect x="42" y="178" width="58" height="4" fill="#9aa6d6"/>${em(71,170,24,'🛏️')}${em(71,196,24,'🛏️')}`)}
+  ${it('heat-1',`<circle cx="116" cy="192" r="20" fill="url(#heatG)" class="glow"/><rect x="106" y="180" width="20" height="25" rx="3" fill="#ff8a3d" stroke="#ffd2a8" stroke-width="1.5"/><path d="M110 186 H122 M110 191 H122 M110 196 H122" stroke="#7a2e10" stroke-width="1.5"/>`)}
+  ${it('comfort-2',`<rect x="132" y="188" width="56" height="17" rx="2" fill="#9aa6d6"/><rect x="132" y="186" width="56" height="4" fill="#dfe7ff"/>${em(148,180,14,'🍳')}${em(170,180,14,'🥕')}`)}
+  ${it('air-2',`<rect x="194" y="192" width="54" height="13" rx="3" fill="#7a4a2a"/>${em(204,184,15,'🌱')}${em(218,182,15,'🌿')}${em(232,179,16,'🌻')}${em(244,185,14,'🥬')}`)}
+  ${it('air-3',`<rect x="254" y="160" width="26" height="45" rx="8" fill="#38d6ff" opacity=".65" stroke="#9cf0ff" stroke-width="2"/><path d="M267 160 V140" stroke="#9cf0ff" stroke-width="3"/>${em(267,183,14,'💧')}`)}
+  ${it('power-2',`<rect x="290" y="172" width="34" height="33" rx="4" fill="#1d2650" stroke="#ffd43b" stroke-width="2"/><rect x="295" y="178" width="7" height="22" rx="2" fill="#8cf05a"/><rect x="304" y="178" width="7" height="22" rx="2" fill="#8cf05a"/><rect x="313" y="178" width="7" height="22" rx="2" fill="#8cf05a" class="glow"/>`)}
+  ${it('power-5',`<circle cx="348" cy="190" r="15" fill="#8cf05a" opacity=".35" class="glow"/><circle cx="348" cy="190" r="10" fill="#1d2650" stroke="#8cf05a" stroke-width="2"/>${em(348,190,13,'⚛️')}`)}
+  ${it('comfort-5',`<g class="bob">${em(178,162,20,'🤖')}</g>`)}
+  <g class="walk">${em(150,212,18,'👩‍🚀')}</g>
+  <g class="walk2">${em(236,212,18,'👨‍🚀')}</g>
+  </svg>`;
+}
+function buildScenes(){$('#sceneWrap').innerHTML=outsideSVG()+insideSVG()}
+function applyScene(){
+  document.querySelectorAll('#sceneWrap .it').forEach(g=>{const [s,l]=g.dataset.k.split('-');g.classList.toggle('off',S.levels[s]<+l)});
+  document.querySelectorAll('#svgOut .win').forEach(w=>w.setAttribute('fill',S.levels.power>0?'#ffe27a':'#2a3680'));
+  $('#svgOut').classList.toggle('hidden',S.tab!=='out');$('#svgIn').classList.toggle('hidden',S.tab!=='in');
+  document.querySelectorAll('.tab').forEach(t=>{const on=t.dataset.tab===S.tab;t.classList.toggle('on',on);
+    const isNew=t.dataset.tab==='in'?S.newIn:S.newOut;t.innerHTML=(t.dataset.tab==='out'?'🌄 Outside':'🛋️ Inside')+(isNew&&!on?'<span class="dot">NEW</span>':'')});
+}
+function setTab(t){document.querySelectorAll('#sceneWrap .poplabel,#sceneWrap .ring,#sceneWrap .sparkle').forEach(e=>e.remove());S.tab=t;if(t==='in')S.newIn=false;else S.newOut=false;save();applyScene()}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b){sfx.click();setTab(b.dataset.tab)}});
+function popOnScene(item,k){
+  const g=document.querySelector(`#sceneWrap .it[data-k="${k}"]`);
+  if(g){g.classList.remove('pop');void g.getBoundingClientRect();g.classList.add('pop');}
+  const wrap=$('#sceneWrap'),lx=item.x/400*100,ly=item.y/250*100;
+  const ring=document.createElement('div');ring.className='ring';ring.style.left=lx+'%';ring.style.top=ly+'%';wrap.appendChild(ring);setTimeout(()=>ring.remove(),1000);
+  for(let i=0;i<8;i++){const s=document.createElement('div');s.className='sparkle em';s.textContent=['✨','⭐','💫'][i%3];s.style.left=lx+'%';s.style.top=ly+'%';const a=i/8*6.28;s.style.setProperty('--dx',Math.cos(a)*60+'px');s.style.setProperty('--dy',Math.sin(a)*45+'px');wrap.appendChild(s);setTimeout(()=>s.remove(),1100)}
+  const lab=document.createElement('div');lab.className='poplabel';lab.innerHTML=`<span class="em">${item.e}</span> ${item.n}!`;lab.style.left=Math.min(82,Math.max(18,lx))+'%';lab.style.top=Math.max(14,ly)+'%';wrap.appendChild(lab);setTimeout(()=>lab.remove(),2700);
+}
+
+/* ================= BASE RENDER ================= */
+function render(){
+  const d=diffOf(S.day);
+  $('#dayNum').textContent=S.day;$('#diffStars').textContent=starStr(d);
+  $('#cargo').textContent=Object.values(S.parts).reduce((a,b)=>a+b,0)+Object.values(S.adv).reduce((a,b)=>a+b,0);
+  $('#missionTitle').textContent=`☀️ Day ${S.day} Missions`;
+  // systems
+  $('#systems').innerHTML=SYSTEMS.map(s=>{
+    const lv=S.levels[s.id],p=S.parts[s.id],a=S.adv[s.id];
+    const canB=lv<BASIC&&p>0,canA=lv>=BASIC&&lv<MAXLV&&a>0,ready=canB||canA,next=lv<MAXLV?ITEMS[s.id][lv]:null;
+    const pips=[1,2,3,4,5].map(n=>`<span class="pip ${n>3?'adv':''} ${lv>=n?'on':''}"></span>`).join('');
+    let right;
+    if(!next)right='<div class="maxed">⭐ MAX</div>';
+    else{
+      const inv=`<div class="inv">📦 <b>${p}</b> · ⭐ <b>${a}</b></div>`;
+      if(ready)right=inv+`<button class="btn lime small" data-up="${s.id}">Install</button>`;
+      else if(lv<BASIC)right=inv+`<div class="hint">Win a mission</div>`;
+      else right=inv+`<div class="hint">Needs ⭐ Advanced</div>`;
+    }
+    return `<div class="sys ${ready?'ready':''}" style="--c:${s.c}">
+      <div class="ico em">${s.icon}</div>
+      <div><div class="name">${s.name} <span style="color:var(--muted);font-size:13px">Lv ${lv}/5</span></div>
+      <div class="next">${next?`Next: <span class="em">${next.e}</span> <b>${next.n}</b> ${lv>=BASIC?'<span style="color:var(--gold)">⭐</span>':''} <span style="opacity:.7">(${next.w==='in'?'inside':'outside'})</span>`:'All upgrades installed!'}</div>
+      <div class="pips">${pips}</div></div>
+      <div class="right">${right}</div></div>`}).join('');
+  // scene stats
+  applyScene();
+  const total=SYSTEMS.reduce((a,s)=>a+S.levels[s.id],0),pct=Math.round(total/(SYSTEMS.length*MAXLV)*100);
+  $('#strengthBar').style.width=pct+'%';$('#strengthTxt').textContent=pct+'%';
+  const passed=TESTS.filter(t=>!t.elite&&S.passed[t.id]).length;$('#badgeCount').textContent=passed;
+  $('#badgeRow').innerHTML=TESTS.map(t=>`<div class="badge ${t.elite?'elite':''} ${S.passed[t.id]?'on':''}" title="${t.name}">${t.e}</div>`).join('');
+  $('#soundBtn').textContent=S.sound?'🔊':'🔇';
+  // missions
+  const ms=dayMissions(S.day);
+  let html=ms.map(k=>{const g=GAMES[k],won=S.won[k];
+    return `<div class="gcard c-${k} ${won?'won':''}"><span class="lvl">${g.type} · ${starStr(d)}</span><div class="gi em">${g.icon}</div><h3>${g.title}</h3><p>${g.short(d)}</p>
+    ${won?'<div class="done">✅ Won today!</div>':`<button class="btn ghost small" data-game="${k}">Play ▶</button>`}</div>`}).join('');
+  const at=advType(S.day),done=S.advDay===S.day;
+  html+=`<div class="gcard c-adv"><span class="lvl">1 try per day</span><div class="gi em">${at==='quiz'?'🧠':'🧮'}</div><h3>Advanced: ${at==='quiz'?'Space Quiz':'Math Mission'}</h3>
+    <p>${at==='quiz'?'5 questions about real space missions.':'5 space math problems.'} Get <b>4 right</b> to win ⭐ Advanced Tech for Level 4–5 upgrades.</p>
+    ${done?`<div class="done">${S.advResult==='pass'?'🌟 Passed today!':'❌ Try again tomorrow'}</div>`:`<button class="btn ghost small" id="advBtn">Take the Challenge ▶</button>`}</div>`;
+  $('#games').innerHTML=html;
+  const ab=$('#advBtn');if(ab)ab.onclick=confirmAdvanced;
+  $('#games').querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>{sfx.click();startGame(b.dataset.game)});
+}
+$('#systems').addEventListener('click',e=>{
+  const b=e.target.closest('[data-up]');if(!b)return;const id=b.dataset.up,lv=S.levels[id];
+  if(lv<BASIC&&S.parts[id]>0)S.parts[id]--;else if(lv>=BASIC&&lv<MAXLV&&S.adv[id]>0)S.adv[id]--;else return;
+  S.levels[id]++;const item=ITEMS[id][lv],k=`${id}-${lv+1}`;
+  S.tab=item.w;if(item.w==='in')S.newIn=false;else S.newOut=false;save();
+  sfx.upgrade();render();
+  $('#sceneWrap').scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>popOnScene(item,k),250);
+});
+
+/* ================= HOW TO PLAY ================= */
+function howToPlay(then){
+  const m=modal(`<div class="big">👩‍🚀</div><h2>How to Play</h2><p>Your crew has landed on Mars. Build them a home that can survive anything!</p>
+  <div class="steps">
+    <div class="step"><div class="n em">☀️</div><div><b>1. Every day brings 3 missions</b><span>6 different mini-games rotate, and they get harder each day.</span></div></div>
+    <div class="step"><div class="n em">📦</div><div><b>2. Win to earn equipment</b><span>Each mission gives a part like a Space Garden or Solar Panel.</span></div></div>
+    <div class="step"><div class="n em">🔧</div><div><b>3. Install it and watch it appear</b><span>Check the Outside and Inside views to see your base grow.</span></div></div>
+    <div class="step"><div class="n em">🧠</div><div><b>4. Advanced Challenge (once a day)</b><span>A space quiz or math mission. Pass to win ⭐ tech for Level 4–5.</span></div></div>
+    <div class="step"><div class="n em">🌪️</div><div><b>5. Run Storm Tests</b><span>Pass all 4 extreme-weather tests to complete the mission!</span></div></div>
+    <div class="step"><div class="n em">🌙</div><div><b>6. Sleep to start a new day</b><span>Tap “Next Day” for new missions and a new challenge.</span></div></div>
+  </div>
+  <div class="mbtns"><button class="btn" id="hOk">Let's go! 🚀</button></div>`);
+  m.querySelector('#hOk').onclick=()=>{sfx.click();closeModal();S.seenHelp=true;save();then&&then()};
+}
+
+/* ================= GAME FLOW ================= */
+let cleanup=null,currentGame=null,advRunning=false,advQuit=null;
+function startGame(key){
+  currentGame=key;advRunning=false;const g=GAMES[key],d=diffOf(S.day);
+  $('#gTitle').innerHTML=`<span class="em">${g.icon}</span> ${g.title}`;$('#gHow').innerHTML=g.how(d);$('#gDiff').innerHTML=`Day ${S.day} · <span class="stars">${starStr(d)}</span>`;
+  show('game');if(cleanup)cleanup();
+  cleanup=g.fn($('#gArea'),finishGame,d);
+}
+function leaveGame(){if(cleanup){cleanup();cleanup=null}$('#gArea').innerHTML='';show('base');render()}
+$('#backBtn').onclick=()=>{sfx.click();
+  if(advRunning){const m=modal(`<div class="big">⚠️</div><h2>Leave the challenge?</h2><p>You only get one try per day. Leaving now counts as a fail.</p>
+    <div class="mbtns"><button class="btn ghost" id="lvStay">Keep going</button><button class="btn" id="lvGo">Leave</button></div>`);
+    m.querySelector('#lvStay').onclick=closeModal;m.querySelector('#lvGo').onclick=()=>{closeModal();advQuit&&advQuit()};return}
+  leaveGame()};
+
+function pickPart(){const need=SYSTEMS.filter(s=>S.levels[s.id]+S.parts[s.id]<BASIC);const pool=need.length?need:SYSTEMS;return pool[(Math.random()*pool.length)|0].id}
+function pickAdv(){const need=SYSTEMS.filter(s=>Math.max(S.levels[s.id],BASIC)+S.adv[s.id]<MAXLV);const pool=need.length?need:SYSTEMS;return pool[(Math.random()*pool.length)|0].id}
+function rewardCard(id,adv,i){
+  const idx=adv?Math.min(MAXLV-1,Math.max(S.levels[id],BASIC)+S.adv[id]-1):Math.min(BASIC-1,S.levels[id]+S.parts[id]-1);
+  const item=ITEMS[id][Math.max(0,idx)];
+  return `<div class="reward ${adv?'advr':''}" style="animation-delay:${i*.15}s"><div class="ri em">${item.e}</div><b>${item.n}</b><span>${adv?'⭐ Advanced · ':''}${SYS[id].name} · ${item.w==='in'?'inside':'outside'}</span></div>`;
+}
+function finishGame(win,bonus){
+  if(cleanup){cleanup();cleanup=null}
+  if(!win){sfx.lose();
+    const m=modal(`<div class="big">😅</div><h2>So close!</h2><p>Every astronaut needs practice. You can try this mission again today.</p>
+      <div class="mbtns"><button class="btn" id="rTry">🔁 Try Again</button><button class="btn ghost" id="rBack">← Base</button></div>`);
+    m.querySelector('#rTry').onclick=()=>{closeModal();startGame(currentGame)};
+    m.querySelector('#rBack').onclick=()=>{closeModal();leaveGame()};return}
+  S.won[currentGame]=true;
+  const n=bonus?2:1,cards=[];
+  for(let i=0;i<n;i++){const id=pickPart();S.parts[id]++;cards.push(rewardCard(id,false,i))}
+  save();sfx.win();confetti(60);
+  const m=modal(`<div class="big">🎉</div><h2>Mission Won!</h2><p>${bonus?'Amazing! You earned a <b style="color:var(--yellow)">bonus</b> item!':'You earned new equipment for your habitat:'}</p>
+    <div>${cards.join('')}</div>
+    <div class="mbtns"><button class="btn lime" id="rUp">🔧 Go Install It</button></div>`);
+  m.querySelector('#rUp').onclick=()=>{closeModal();leaveGame()};
+}
+const startOverlay=(el,fn)=>{const o=document.createElement('div');o.className='overlay-start';o.innerHTML='<button class="btn">▶ Start!</button>';el.appendChild(o);o.querySelector('button').onclick=()=>{sfx.click();o.remove();fn()}};
+
+/* ---------- 1. Star Memory ---------- */
+function memPairs(d){return[4,5,6,7,8][d-1]}
+function memoryGame(area,done,d){
+  const P=memPairs(d),pool=['🚀','🪐','🌙','⭐','🛰️','👽','☄️','🌍'];
+  const icons=shuffle(pool.slice(0,P).concat(pool.slice(0,P)));
+  const cols=P===5?5:4;
+  area.innerHTML=`<div class="hud"><span>Moves: <b id="mv">0</b></span><span>Pairs: <b id="pr">0</b>/${P}</span></div>
+  <div class="mem" style="grid-template-columns:repeat(${cols},1fr);max-width:${cols*120}px;margin:0 auto">${icons.map((ic,i)=>`<button class="card" data-i="${i}" aria-label="card"><div class="in"><div class="f">?</div><div class="b em">${ic}</div></div></button>`).join('')}</div>`;
+  let open=[],lock=false,moves=0,pairs=0,alive=true;
+  area.querySelectorAll('.card').forEach(c=>c.onclick=()=>{
+    if(lock||c.classList.contains('flip')||c.classList.contains('done'))return;
+    c.classList.add('flip');sfx.click();open.push(c);
+    if(open.length===2){moves++;area.querySelector('#mv').textContent=moves;lock=true;const[a,b]=open;
+      if(icons[a.dataset.i]===icons[b.dataset.i]){setTimeout(()=>{if(!alive)return;a.classList.add('done');b.classList.add('done');sfx.pop();open=[];lock=false;pairs++;area.querySelector('#pr').textContent=pairs;
+          if(pairs===P)setTimeout(()=>alive&&done(true,moves<=P*2),500)},350)}
+      else setTimeout(()=>{if(!alive)return;a.classList.remove('flip');b.classList.remove('flip');open=[];lock=false},800)}
+  });
+  return()=>{alive=false};
+}
+
+/* ---------- 2. Meteor Blaster ---------- */
+function meteorGame(area,done,d){
+  const GOAL=8+2*d;
+  area.innerHTML=`<div class="hud"><span>🎯 <b id="mh">0</b>/${GOAL}</span><span id="ml">❤️❤️❤️</span></div>
+  <div class="field" id="fld"><div class="ground"></div><div class="mini-dome"></div></div>`;
+  const fld=area.querySelector('#fld');
+  let hits=0,lives=3,list=[],last=0,spawnT=0,running=false,raf,over=false;
+  const upd=()=>{area.querySelector('#mh').textContent=hits;area.querySelector('#ml').textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(3-Math.max(0,lives))};
+  function end(win){if(over)return;over=true;running=false;cancelAnimationFrame(raf);setTimeout(()=>done(win,win&&lives===3),500)}
+  function hurt(){lives--;sfx.bad();fld.classList.remove('shake');void fld.offsetWidth;fld.classList.add('shake');upd();if(lives<=0)end(false)}
+  function spawn(){
+    const sat=d>=3&&Math.random()<.22;
+    const el=document.createElement('button');el.className='meteor em';el.textContent=sat?'🛰️':'☄️';
+    el.style.left=(Math.random()*(fld.clientWidth-60))+'px';
+    const m={el,y:-60,v:(50+12*d)+Math.random()*40+hits*3,dead:false,sat};
+    el.addEventListener('pointerdown',e=>{e.preventDefault();if(m.dead||over)return;m.dead=true;
+      if(sat){el.textContent='💥';el.classList.add('boom');setTimeout(()=>el.remove(),260);hurt();return}
+      hits++;sfx.pop();el.textContent='💥';el.classList.add('boom');setTimeout(()=>el.remove(),260);upd();if(hits>=GOAL)end(true)});
+    fld.appendChild(el);list.push(m);
+  }
+  function loop(t){if(!running)return;const dt=Math.min(.05,(t-last)/1000);last=t;
+    spawnT-=dt;if(spawnT<=0){spawn();spawnT=Math.max(.45,1.25-hits*.03-d*.08)}
+    const H=fld.clientHeight-100;
+    for(const m of list){if(m.dead)continue;m.y+=m.v*dt;m.el.style.transform=`translateY(${m.y}px)`;
+      if(m.y>H){m.dead=true;m.el.remove();if(!m.sat){hurt();if(over)return}}}
+    list=list.filter(m=>!m.dead);raf=requestAnimationFrame(loop)}
+  startOverlay(fld,()=>{running=true;last=performance.now();spawnT=.3;raf=requestAnimationFrame(loop)});
+  return()=>{running=false;over=true;cancelAnimationFrame(raf)};
+}
+
+/* ---------- 3. Signal Repeat ---------- */
+function signalGame(area,done,d){
+  const TARGET=3+d,pads=[{c:'#ff5a5a',f:330},{c:'#38d6ff',f:415},{c:'#ffd43b',f:494},{c:'#8cf05a',f:587}],pI=['🪐','🌍','🌕','☄️'];
+  area.innerHTML=`<div class="hud"><span>Round <b id="sr">1</b>/${TARGET}</span><span>Lives: <b id="sl">❤️❤️</b></span></div>
+  <div class="msg" id="sm">Get ready…</div>
+  <div class="pads">${pads.map((p,k)=>`<button class="pad em" style="--c:${p.c}">${pI[k]}</button>`).join('')}</div>`;
+  const btns=[...area.querySelectorAll('.pad')];let seq=[],inp=[],accept=false,mistakes=0,alive=true,timers=[];
+  const T=(fn,ms)=>timers.push(setTimeout(()=>{if(alive)fn()},ms));const msg=t=>area.querySelector('#sm').textContent=t;
+  function flash(k){btns[k].classList.add('lit');tone(pads[k].f,.3,'triangle',.15);setTimeout(()=>btns[k].classList.remove('lit'),330)}
+  function play(){accept=false;msg('👀 Watch the signal…');const gap=Math.max(380,720-seq.length*30-d*30);
+    seq.forEach((s,k)=>T(()=>flash(s),700+k*gap));T(()=>{accept=true;inp=[];msg('👆 Your turn! Repeat it.')},700+seq.length*gap)}
+  function next(){seq.push((Math.random()*4)|0);area.querySelector('#sr').textContent=seq.length;play()}
+  btns.forEach((b,k)=>b.onclick=()=>{if(!accept)return;flash(k);inp.push(k);const n=inp.length-1;
+    if(inp[n]!==seq[n]){accept=false;mistakes++;sfx.bad();area.querySelector('#sl').textContent='❤️'.repeat(2-mistakes)+'🖤'.repeat(mistakes);
+      if(mistakes>=2){msg('Signal lost!');T(()=>done(false),700)}else{msg('Oops! Watch again…');T(play,900)}return}
+    if(inp.length===seq.length){accept=false;if(seq.length>=TARGET){msg('📡 Signal received!');T(()=>done(true,mistakes===0),700)}else{msg('✅ Great!');T(next,800)}}});
+  T(next,500);
+  return()=>{alive=false;timers.forEach(clearTimeout)};
+}
+
+/* ---------- 4. Rover Run (maze) ---------- */
+function mazeGame(area,done,d){
+  const N=5+d,dens=.2+.04*d;
+  const grid=Array.from({length:N},()=>Array(N).fill(false));
+  const safe=new Set(['0,0']);let r=0,c=0;
+  while(r<N-1||c<N-1){if(r===N-1)c++;else if(c===N-1)r++;else if(Math.random()<.5)c++;else r++;safe.add(r+','+c)}
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++)if(!safe.has(i+','+j)&&Math.random()<dens)grid[i][j]=true;
+  function bfs(){const dist=Array.from({length:N},()=>Array(N).fill(-1));dist[0][0]=0;const q=[[0,0]];
+    while(q.length){const[x,y]=q.shift();for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const a=x+dx,b=y+dy;if(a>=0&&b>=0&&a<N&&b<N&&!grid[a][b]&&dist[a][b]<0){dist[a][b]=dist[x][y]+1;q.push([a,b])}}}return dist[N-1][N-1]}
+  const best=bfs(),battery=best+Math.max(4,13-2*d);
+  let pos=[0,0],moves=0,over=false;const trail=new Set(['0,0']);
+  area.innerHTML=`<div class="hud"><span>🔋 <b id="bat">${battery}</b> moves left</span><span>Shortest: ${best}</span></div>
+  <div class="maze" id="mz" style="grid-template-columns:repeat(${N},1fr)"></div>
+  <div class="dpad"><span></span><button class="dbtn em" data-m="-1,0">⬆️</button><span></span><button class="dbtn em" data-m="0,-1">⬅️</button><button class="dbtn em" data-m="1,0">⬇️</button><button class="dbtn em" data-m="0,1">➡️</button></div>`;
+  const mz=area.querySelector('#mz');
+  function draw(){let h='';for(let i=0;i<N;i++)for(let j=0;j<N;j++){const k=i+','+j,isR=pos[0]===i&&pos[1]===j,isG=i===N-1&&j===N-1;
+    h+=`<div class="cell em ${grid[i][j]?'rock':''} ${trail.has(k)&&!isR?'trail':''} ${isG?'goal':''}">${isR?'🚙':isG?'🏠':grid[i][j]?'🪨':''}</div>`}mz.innerHTML=h}
+  function move(dx,dy){if(over)return;const a=pos[0]+dx,b=pos[1]+dy;
+    if(a<0||b<0||a>=N||b>=N||grid[a][b]){sfx.bad();mz.classList.remove('shake');void mz.offsetWidth;mz.classList.add('shake');return}
+    pos=[a,b];moves++;trail.add(a+','+b);sfx.click();draw();area.querySelector('#bat').textContent=battery-moves;
+    if(a===N-1&&b===N-1){over=true;sfx.pop();setTimeout(()=>done(true,moves<=best+2),500);return}
+    if(moves>=battery){over=true;setTimeout(()=>done(false),500)}}
+  area.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const[x,y]=b.dataset.m.split(',').map(Number);move(x,y)});
+  const key=e=>{const m={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.key];if(m){e.preventDefault();move(...m)}};
+  document.addEventListener('keydown',key);draw();
+  return()=>{over=true;document.removeEventListener('keydown',key)};
+}
+
+/* ---------- 5. Star Connect ---------- */
+function connectGame(area,done,d){
+  const N=4+2*d,TIME=Math.round(N*2.3+6);
+  const pts=[];let tries=0;
+  while(pts.length<N&&tries<4000){tries++;const p=[8+Math.random()*84,9+Math.random()*82];if(pts.every(q=>Math.hypot(q[0]-p[0],(q[1]-p[1])*.8)>14))pts.push(p)}
+  area.innerHTML=`<div class="hud"><span>Next: <b id="cn">1</b></span><span id="cl">❤️❤️❤️</span></div><div class="tbar"><i id="ct"></i></div>
+  <div class="cfield" id="cf"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g id="lines" stroke="#ffd43b" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linecap="round"></g></svg>
+  ${pts.map((p,i)=>`<button class="star" data-i="${i}" style="left:${p[0]}%;top:${p[1]}%">${i+1}</button>`).join('')}</div>`;
+  const cf=area.querySelector('#cf');let nxt=0,lives=3,mist=0,over=false,iv,t0;
+  function end(win){if(over)return;over=true;clearInterval(iv);setTimeout(()=>done(win,win&&mist===0),600)}
+  cf.querySelectorAll('.star').forEach(b=>b.onclick=()=>{if(over||!t0)return;const i=+b.dataset.i;
+    if(i===nxt){b.classList.add('lit');tone(440+i*40,.12,'triangle',.12);
+      if(i>0){const a=pts[i-1],c=pts[i];cf.querySelector('#lines').insertAdjacentHTML('beforeend',`<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" vector-effect="non-scaling-stroke"/>`)}
+      nxt++;area.querySelector('#cn').textContent=Math.min(nxt+1,N);if(nxt===pts.length){sfx.pop();end(true)}}
+    else if(!b.classList.contains('lit')){mist++;lives--;sfx.bad();b.classList.add('bad');setTimeout(()=>b.classList.remove('bad'),300);area.querySelector('#cl').textContent='❤️'.repeat(lives)+'🖤'.repeat(3-lives);if(lives<=0)end(false)}});
+  startOverlay(cf,()=>{t0=performance.now();iv=setInterval(()=>{const left=1-(performance.now()-t0)/1000/TIME;area.querySelector('#ct').style.width=Math.max(0,left*100)+'%';if(left<=0)end(false)},100)});
+  return()=>{over=true;clearInterval(iv)};
+}
+
+/* ---------- 6. Repair Rush ---------- */
+function repairGame(area,done,d){
+  const TARGET=8+3*d,DUR=30,LIFE=1700-180*d,EVERY=850-90*d,labels=['Hatch','Vent','Panel','Pipe','Wire','Pump','Fan','Valve','Light'];
+  area.innerHTML=`<div class="hud"><span>🔧 <b id="rf">0</b>/${TARGET} fixed</span><span>⏱️ <b id="rt">${DUR}</b>s</span></div><div class="tbar"><i id="rbar"></i></div>
+  <div style="position:relative"><div class="rgrid" id="rg">${labels.map((l,i)=>`<button class="rp" data-i="${i}"><div><div class="em" style="font-size:30px">⚙️</div><div class="lbl">${l}</div></div></button>`).join('')}</div></div>`;
+  const tiles=[...area.querySelectorAll('.rp')];let fixed=0,over=false,t0,iv,sp,timers=[];
+  const setTile=(el,state)=>{el.classList.remove('spark','fixed');if(state)el.classList.add(state);el.querySelector('.em').textContent=state==='spark'?'⚡':state==='fixed'?'✅':'⚙️'};
+  function end(win){if(over)return;over=true;clearInterval(iv);clearInterval(sp);timers.forEach(clearTimeout);const el=(performance.now()-t0)/1000;setTimeout(()=>done(win,win&&el<=DUR*.75),500)}
+  function spark(){const free=tiles.filter(t=>!t.classList.contains('spark'));if(!free.length)return;const t=free[(Math.random()*free.length)|0];setTile(t,'spark');
+    timers.push(setTimeout(()=>{if(t.classList.contains('spark'))setTile(t,null)},LIFE))}
+  tiles.forEach(t=>t.onclick=()=>{if(over||!t0||!t.classList.contains('spark'))return;fixed++;sfx.pop();setTile(t,'fixed');timers.push(setTimeout(()=>{if(t.classList.contains('fixed'))setTile(t,null)},350));
+    area.querySelector('#rf').textContent=fixed;if(fixed>=TARGET)end(true)});
+  startOverlay(area.querySelector('#rg').parentElement,()=>{t0=performance.now();spark();sp=setInterval(()=>{spark();if(d>=4&&Math.random()<.35)spark()},EVERY);
+    iv=setInterval(()=>{const el=(performance.now()-t0)/1000,left=Math.max(0,DUR-el);area.querySelector('#rt').textContent=Math.ceil(left);area.querySelector('#rbar').style.width=(left/DUR*100)+'%';if(left<=0)end(false)},100)});
+  return()=>{over=true;clearInterval(iv);clearInterval(sp);timers.forEach(clearTimeout)};
+}
+
+/* ================= ADVANCED CHALLENGE ================= */
+function makeMath(d){
+  const qs=[],used=new Set();
+  const T=[
+    ()=>{const a=ri(3,8+6*d),b=ri(2,6+5*d);return{q:`The crew has ${a} oxygen tanks. A supply rocket brings ${b} more. How many tanks now?`,ans:a+b,u:'tanks'}},
+    ()=>{const a=ri(40,100),b=ri(5,Math.min(a-5,15+8*d));return{q:`The rover's battery is at ${a}%. A drive to a crater uses ${b}%. How much battery is left?`,ans:a-b,u:'%'}},
+    ()=>{const a=ri(2,3+d),b=ri(2,3+d);return{q:`Each solar panel makes ${a} kW of power. How much power do ${b} panels make?`,ans:a*b,u:'kW'}},
+    ()=>{const b=ri(2,3+d),e=ri(2,4+d);return{q:`${b*e} litres of water are shared equally by ${b} astronauts. How many litres does each get?`,ans:e,u:'litres'}},
+    ()=>{const a=ri(3,5+2*d),b=ri(2,4),c=ri(2,10+3*d);return{q:`A rover drives ${a} km each hour for ${b} hours, then ${c} km more. How far did it drive in total?`,ans:a*b+c,u:'km'}},
+    ()=>{const b=ri(2,2+d);return{q:`Pretend a Mars day is 25 hours long. How many hours are in ${b} Mars days?`,ans:25*b,u:'hours'}},
+    ()=>{const p=ri(2,3+d),s=ri(3,6);return{q:`A greenhouse has ${p} rows with ${s} plants in each row. How many plants are there?`,ans:p*s,u:'plants'}},
+    ()=>{const a=ri(20,60)*d,b=ri(5,20);return{q:`A rocket carries ${a} kg of food. The crew eats ${b} kg. How much food is left?`,ans:a-b,u:'kg'}}
+  ];
+  const allowed=d<=2?[0,1,2,3,6]:[0,1,2,3,4,5,6,7];
+  const order=shuffle(allowed.slice());
+  for(let i=0;i<5;i++){const t=T[order[i%order.length]]();
+    const opts=new Set([t.ans]);while(opts.size<4){const o=t.ans+ri(-Math.max(3,Math.round(t.ans*.3)),Math.max(3,Math.round(t.ans*.3)));if(o>0&&o!==t.ans)opts.add(o)}
+    qs.push({q:t.q,opts:shuffle([...opts].map(o=>`${o} ${t.u}`)),right:`${t.ans} ${t.u}`,f:null})}
+  return qs;
+}
+function makeQuiz(){
+  let avail=QUIZ.map((_,i)=>i).filter(i=>!S.usedQ.includes(i));
+  if(avail.length<5){S.usedQ=[];avail=QUIZ.map((_,i)=>i)}
+  const pick=shuffle(avail).slice(0,5);S.usedQ.push(...pick);
+  return pick.map(i=>({q:QUIZ[i].q,opts:shuffle(QUIZ[i].a.slice()),right:QUIZ[i].a[0],f:QUIZ[i].f}));
+}
+function confirmAdvanced(){
+  sfx.click();const at=advType(S.day);
+  const m=modal(`<div class="big em">${at==='quiz'?'🧠':'🧮'}</div><h2>Advanced ${at==='quiz'?'Space Quiz':'Math Mission'}</h2>
+  <p>5 questions. Get <b style="color:var(--yellow)">4 or more</b> right to win ⭐ Advanced Tech. Get all 5 for a bonus!<br><br>You only get <b style="color:var(--text)">one try today</b>. Tomorrow there will be a new challenge.</p>
+  <div class="mbtns"><button class="btn gold" id="aGo">I'm ready! ▶</button><button class="btn ghost" id="aNo">Not yet</button></div>`);
+  m.querySelector('#aNo').onclick=closeModal;m.querySelector('#aGo').onclick=()=>{closeModal();startAdvanced()};
+}
+function startAdvanced(){
+  if(S.advDay===S.day)return;
+  const at=advType(S.day),d=diffOf(S.day),qs=at==='quiz'?makeQuiz():makeMath(d);
+  S.advDay=S.day;S.advResult='fail';save(); // counts as used immediately
+  currentGame='advanced';advRunning=true;if(cleanup){cleanup();cleanup=null}
+  $('#gTitle').innerHTML=`<span class="em">${at==='quiz'?'🧠':'🧮'}</span> Advanced ${at==='quiz'?'Space Quiz':'Math Mission'}`;
+  $('#gHow').innerHTML=`Answer <b>5 questions</b>. Get <b>4 right</b> to pass. One try only today!`;
+  $('#gDiff').innerHTML=`Day ${S.day} · <span class="stars">${starStr(d)}</span>`;
+  show('game');
+  let i=0,score=0,res=[];const area=$('#gArea');
+  advQuit=()=>finishAdvanced(score,true);
+  function q(){const Q=qs[i];
+    area.innerHTML=`<div class="qcard"><div class="qdots">${qs.map((_,k)=>`<span class="qdot ${res[k]===true?'ok':res[k]===false?'no':k===i?'cur':''}"></span>`).join('')}</div>
+    <div style="text-align:center;color:var(--muted);font-weight:600">Question ${i+1} of 5 · Score ${score}</div>
+    <div class="qtext">${Q.q}</div><div class="opts">${Q.opts.map(o=>`<button class="opt">${o}</button>`).join('')}</div><div id="qf"></div></div>`;
+    area.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(area.querySelector('.opt.right'))return;const ok=b.textContent===Q.right;
+      area.querySelectorAll('.opt').forEach(x=>{if(x.textContent===Q.right)x.classList.add('right')});if(!ok)b.classList.add('wrong');
+      res[i]=ok;if(ok){score++;sfx.pop()}else sfx.bad();
+      area.querySelector('#qf').innerHTML=`<div class="fact">${ok?'✅ Correct!':'❌ The answer is <b style="color:var(--text)">'+Q.right+'</b>.'}${Q.f?' '+Q.f:''}</div>
+        <div class="mbtns" style="margin-top:14px"><button class="btn" id="qn">${i<4?'Next ▶':'See Results'}</button></div>`;
+      area.querySelector('#qn').onclick=()=>{i++;if(i<5)q();else finishAdvanced(score,false)}})}
+  q();
+}
+function finishAdvanced(score,quit){
+  advRunning=false;advQuit=null;const pass=!quit&&score>=4;
+  S.advResult=pass?'pass':'fail';
+  const cards=[];
+  if(pass){const n=score===5?2:1;for(let k=0;k<n;k++){const id=pickAdv();S.adv[id]++;cards.push(rewardCard(id,true,k))}}
+  save();
+  if(pass){sfx.win();confetti(80)}else sfx.lose();
+  const m=modal(pass?`<div class="big">🌟</div><h2>Challenge Passed!</h2><p>You scored <b style="color:var(--yellow)">${score}/5</b>. Here is your ⭐ Advanced Tech${score===5?' (perfect score bonus!)':''}:</p>
+      <div>${cards.join('')}</div><p style="font-size:14px">Advanced Tech installs once a system reaches Level 3.</p>
+      <div class="mbtns"><button class="btn lime" id="aOk">🔧 Back to Base</button></div>`
+    :`<div class="big">${quit?'🚪':'📚'}</div><h2>${quit?'Challenge left':'Not this time'}</h2><p>${quit?'You left the challenge.':`You scored <b style="color:var(--text)">${score}/5</b>. You needed 4.`} A new challenge will be waiting tomorrow!</p>
+      <div class="mbtns"><button class="btn" id="aOk">← Back to Base</button></div>`);
+  m.querySelector('#aOk').onclick=()=>{closeModal();leaveGame()};
+}
+
+/* ================= DAY / NIGHT ================= */
+function nextDay(){
+  sfx.click();
+  const left=dayMissions(S.day).filter(k=>!S.won[k]).length,advLeft=S.advDay!==S.day;
+  if(left||advLeft){
+    const m=modal(`<div class="big">🌙</div><h2>End Day ${S.day}?</h2><p>You still have ${left?`<b style="color:var(--text)">${left} mission${left>1?'s':''}</b>`:''}${left&&advLeft?' and ':''}${advLeft?'<b style="color:var(--text)">the Advanced Challenge</b>':''} left today. They'll be gone tomorrow.</p>
+    <div class="mbtns"><button class="btn ghost" id="nStay">Keep playing</button><button class="btn violet" id="nGo">Sleep 😴</button></div>`);
+    m.querySelector('#nStay').onclick=closeModal;m.querySelector('#nGo').onclick=()=>{closeModal();sleep()};
+  }else sleep();
+}
+function sleep(){
+  const won=Object.keys(S.won).length,prev=S.day;
+  S.day++;S.won={};save();sfx.night();
+  const n=document.createElement('div');n.id='night';
+  n.innerHTML=`<div class="nbox"><div class="big em">🌙</div><h2>Day ${prev} complete!</h2><p>Missions won today: <b>${won}</b>. The crew is sleeping… 😴</p></div>`;
+  document.body.appendChild(n);
+  setTimeout(()=>{
+    const d=diffOf(S.day),ms=dayMissions(S.day),at=advType(S.day);
+    n.classList.add('morning');sfx.win();
+    n.innerHTML=`<div class="nbox"><div class="big em">☀️</div><h2>Good morning! Day ${S.day}</h2><p>Difficulty: <span class="stars" style="font-size:22px">${starStr(d)}</span></p>
+      <div class="mlist">${ms.map(k=>`<div class="mitem"><span class="e em">${GAMES[k].icon}</span>${GAMES[k].title}</div>`).join('')}
+      <div class="mitem" style="background:rgba(255,194,59,.35)"><span class="e em">${at==='quiz'?'🧠':'🧮'}</span>${at==='quiz'?'Space Quiz':'Math Mission'}</div></div>
+      <button class="btn" id="dayGo">Start Day ${S.day} ▶</button></div>`;
+    n.querySelector('#dayGo').onclick=()=>{sfx.click();n.remove();render()};
+  },2000);
+}
+
+/* ================= STORM TEST ================= */
+function reqOk(t){return Object.entries(t.req).every(([k,v])=>S.levels[k]>=v)}
+function openTests(){
+  sfx.click();
+  const m=modal(`<div class="big">🧪</div><h2>Storm Test Lab</h2><p>Test your habitat against Mars' extreme weather. Green means ready!</p>
+  <div class="tests">${TESTS.map(t=>`<div class="tcard ${t.elite?'elite':''} ${S.passed[t.id]?'passed':''}">
+    <div class="th"><span class="e em">${t.e}</span>${t.name}${S.passed[t.id]?' 🏅':''}</div><div class="tp">${t.info}</div>
+    <div class="reqs">${Object.entries(t.req).map(([k,v])=>`<span class="req ${S.levels[k]>=v?'ok':''}">${SYS[k].icon} ${SYS[k].name.split(' ')[0]} Lv${v}</span>`).join('')}</div>
+    <button class="btn ${t.elite?'violet':'cyan'} small" data-run="${t.id}">Run Test ▶</button></div>`).join('')}</div>
+  <div class="mbtns"><button class="btn ghost" id="tClose">Close</button></div>`);
+  m.querySelector('#tClose').onclick=()=>{sfx.click();closeModal()};
+  m.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{closeModal();runTest(TESTS.find(t=>t.id===b.dataset.run))});
+}
+function runTest(t){
+  const sc=document.createElement('div');sc.id='runScene';sc.className=t.cls;let fx='';
+  for(let i=0;i<40;i++){const dust=t.id==='dust';const dd=(dust?(.6+Math.random()*.8):(1+Math.random()*1.6)).toFixed(2),dl=(Math.random()*2).toFixed(2);
+    const pos=dust?`top:${Math.random()*100}vh`:`left:${Math.random()*110}vw`;const ch=t.id==='cold'?'❄':(t.id==='meteor'||t.id==='mega')?'☄️':'';
+    fx+=`<span class="fx em" style="${pos};animation-duration:${dd}s;animation-delay:-${dl}s">${ch}</span>`}
+  sc.innerHTML=`<div class="bgfx"></div>${fx}<div class="runbox"><div class="big em">${t.e}</div><h2>${t.name}</h2><p style="color:var(--muted);margin:0 0 12px">Testing your habitat…</p>
+    <div class="bar"><i id="runBar"></i></div><div class="checks" id="checks"></div><div class="mbtns hidden" id="runBtns"></div></div>`;
+  document.body.appendChild(sc);tone(110,2.2,'sawtooth',.05);
+  requestAnimationFrame(()=>{const rb=sc.querySelector('#runBar');rb.style.transition='width 2.4s linear';rb.style.width='100%'});
+  const entries=Object.entries(t.req);
+  entries.forEach(([k,v],i)=>setTimeout(()=>{const ok=S.levels[k]>=v,row=document.createElement('div');row.className='check';
+    row.innerHTML=`<span>${SYS[k].icon} ${SYS[k].name} (needs Lv ${v})</span><span class="r ${ok?'ok':'no'}">${ok?'✔ PASS':'✖ Lv '+S.levels[k]}</span>`;
+    sc.querySelector('#checks').appendChild(row);requestAnimationFrame(()=>row.classList.add('show'));ok?sfx.pop():sfx.bad()},700+i*600));
+  setTimeout(()=>{const pass=reqOk(t),btns=sc.querySelector('#runBtns');btns.classList.remove('hidden');
+    const h=sc.querySelector('.runbox h2'),p=sc.querySelector('.runbox p');
+    if(pass){const first=!S.passed[t.id];S.passed[t.id]=true;save();sfx.win();confetti(70);h.textContent='🏅 Test Passed!';p.textContent=first?`Your habitat survived the ${t.name}! Badge earned.`:`Your habitat survived the ${t.name} again!`}
+    else{sfx.lose();h.textContent='⚠️ Not ready yet';p.textContent=t.elite?'Upgrade the red systems with ⭐ Advanced Tech from the daily challenge.':'Upgrade the red systems, then try again. Win missions to earn more parts!'}
+    btns.innerHTML='<button class="btn" id="rb1">← Back to Base</button>';
+    btns.querySelector('#rb1').onclick=()=>{sc.remove();render();
+      if(pass&&t.elite&&!S.elite){S.elite=true;save();eliteComplete()}
+      else if(pass&&TESTS.filter(x=>!x.elite).every(x=>S.passed[x.id])&&!S.done){S.done=true;save();missionComplete()}}},700+entries.length*600+800);
+}
+function missionComplete(){sfx.win();confetti(160);
+  const m=modal(`<div class="big em">👩‍🚀🏆👨‍🚀</div><h2>Mission Complete!</h2><p>Your habitat survived dust storms, freezing nights, meteor showers and solar flares in <b style="color:var(--text)">${S.day} day${S.day>1?'s':''}</b>. Your crew is safe on Mars!</p>
+  <p style="font-size:15px">Want more? Keep winning daily challenges to unlock ⭐ Level 4–5 tech and beat the <b style="color:var(--pink)">Mega Storm</b>.</p>
+  <div class="mbtns"><button class="btn lime" id="mcKeep">Keep Building</button><button class="btn ghost" id="mcNew">🚀 New Mission</button></div>`);
+  m.querySelector('#mcKeep').onclick=closeModal;m.querySelector('#mcNew').onclick=()=>{closeModal();resetGame()}}
+function eliteComplete(){sfx.win();confetti(200);
+  const m=modal(`<div class="big em">🌀👑</div><h2>Elite Habitat!</h2><p>Your base survived the Mega Storm. You are a true Mars engineer!</p><div class="mbtns"><button class="btn lime" id="eOk">Awesome!</button></div>`);
+  m.querySelector('#eOk').onclick=closeModal}
+function resetGame(){const snd=S.sound;S=freshState();S.sound=snd;S.seenHelp=true;for(const k in missionMemo)delete missionMemo[k];save();render();toast('New mission started! 🚀')}
+
+/* ================= WIRING ================= */
+$('#startBtn').onclick=()=>{sfx.click();show('base');render();if(!S.seenHelp)howToPlay()};
+$('#howBtn1').onclick=()=>{sfx.click();howToPlay()};
+$('#howBtn2').onclick=()=>{sfx.click();howToPlay()};
+$('#soundBtn').onclick=()=>{S.sound=!S.sound;save();render();sfx.click()};
+$('#testBtn').onclick=openTests;
+$('#sleepBtn').onclick=nextDay;
+$('#resetBtn').onclick=()=>{sfx.click();const m=modal(`<div class="big">🔄</div><h2>Start over?</h2><p>This clears your habitat, days, equipment and badges.</p>
+  <div class="mbtns"><button class="btn" id="rsYes">Yes, start over</button><button class="btn ghost" id="rsNo">Cancel</button></div>`);
+  m.querySelector('#rsYes').onclick=()=>{closeModal();resetGame()};m.querySelector('#rsNo').onclick=closeModal};
+
+/* starfield */
+(function(){const cv=$('#starCanvas'),cx=cv.getContext('2d');let st=[];
+  function size(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;
+    st=Array.from({length:Math.round(innerWidth*innerHeight/5000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:(Math.random()*1.4+.3)*devicePixelRatio,p:Math.random()*6.28,s:.5+Math.random()*1.5}))}
+  size();addEventListener('resize',size);
+  (function draw(t){cx.clearRect(0,0,cv.width,cv.height);for(const s of st){cx.globalAlpha=.35+.65*Math.abs(Math.sin(s.p+t/1000*s.s));cx.fillStyle='#fff';cx.beginPath();cx.arc(s.x,s.y,s.r,0,6.28);cx.fill()}requestAnimationFrame(draw)})(0);
+})();
+buildScenes();render();
+</script>
+</body>
+</html>
